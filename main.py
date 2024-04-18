@@ -7,9 +7,9 @@ from fastapi.security import APIKeyHeader
 
 coursemanager = CourseManager()
 usermanager = UserManager()
-usermanager.create_a_user("John", "pwd", "studnet")
-usermanager.create_a_user("Alice", "pwd", "teacher")
-usermanager.create_a_user("Jimmy", "pwd", "admin")
+usermanager.create_a_user("John", "pwd", "Studnet")
+usermanager.create_a_user("Alice", "pwd", "Teacher")
+usermanager.create_a_user("Jimmy", "pwd", "Admin")
 
 app = FastAPI()
 

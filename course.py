@@ -7,10 +7,14 @@ class CourseManager:
         self.counter = 0
 
     def create_a_course(self, course_code, semester, teacher_list):
-        if (type(course_code) != str or type(semester) != str or 
-            type(teacher_list) != list or (len(teacher_list) > 0 and type(teacher_list[0]) != User)):
+        if (type(course_code) != str or type(semester) != str or type(teacher_list) != list):
             print("Course creation error")
             return
+        else:
+            for item in teacher_list:
+                if (type(item) != User or item.type != "Teacher"):
+                    print("Course creation error")
+                    return
 
         ## automatically generate a courseId
         new_course_id = self.generate_id()
@@ -53,9 +57,14 @@ class Course:
         self.assignment_counter = 0
 
     def import_students(self, student_list):
-        if (type(student_list) != list or (len(student_list) > 0 and type(student_list[0]) != User)):
+        if (type(student_list) != list):
             print("Import error")
             return
+        else:
+            for item in student_list:
+                if (type(item) != User or item.type != "Student"):
+                    print("Import error")
+                    return
 
         # the admin should import the students to a course
         self.student_list = student_list

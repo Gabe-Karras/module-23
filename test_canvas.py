@@ -18,8 +18,8 @@ def arranged_submission():
 @pytest.fixture
 def arranged_course():
     from course import Course
-    my_course = Course(0, "COSC 381", "Winter", [arranged_user])
-    my_course.import_students([arranged_user])
+    my_course = Course(0, "COSC 381", "Winter", [arranged_teacher])
+    my_course.import_students([arranged_student])
     return my_course
 
 @pytest.fixture
@@ -29,9 +29,15 @@ def arranged_courseManager():
     return my_courseManager
 
 @pytest.fixture
-def arranged_user():
+def arranged_student():
     from user import User
     my_user = User(0, "Gabe Karras", "1234", "Student")
+    return my_user
+
+@pytest.fixture
+def arranged_teacher():
+    from user import User
+    my_user = User(1, "Dr. Jiang", "4321", "Teacher")
     return my_user
 
 @pytest.fixture
@@ -54,9 +60,11 @@ def test_submit_assignment(mock_print, arranged_assignment, arranged_submission)
 
 # ------------ course.py ------------
 @patch("builtins.print")
-def test_import_students(mock_print, arranged_course, arranged_user):
+def test_import_students(mock_print, arranged_course, arranged_student, arranged_teacher):
     # Act:
-    arranged_course.import_students([arranged_user])
+    arranged_course.import_students([arranged_student])
+    arranged_course.import_students([arranged_student, arranged_teacher])
+    mock_print.assert_called_with("Import error")
     arranged_course.import_students(["goofy"])
 
     # Assert:
@@ -87,9 +95,11 @@ def test_generate_assignment_id(arranged_course):
 
 @patch("course.CourseManager.generate_id", return_value=0)
 @patch("builtins.print")
-def test_create_a_course(mock_print, mock_generate_id, arranged_courseManager, arranged_user):
+def test_create_a_course(mock_print, mock_generate_id, arranged_courseManager, arranged_teacher, arranged_student):
     # Act:
-    arranged_courseManager.create_a_course("COSC 381", "Winter", [arranged_user])
+    arranged_courseManager.create_a_course("COSC 381", "Winter", [arranged_teacher])
+    arranged_courseManager.create_a_course("COSC 381", "Winter", [arranged_teacher, arranged_student])
+    mock_print.assert_called_with("Course creation error")
     arranged_courseManager.create_a_course(42, "goofy", "goofy")
 
     # Assert:
@@ -107,10 +117,10 @@ def test_generate_id(arranged_courseManager):
     assert arranged_courseManager.counter == 3
 
 @patch("builtins.print")
-def test_find_a_course(mock_print, arranged_courseManager, arranged_user):
+def test_find_a_course(mock_print, arranged_courseManager, arranged_teacher):
     # Act:
-    arranged_courseManager.create_a_course("COSC 381", "Winter", [arranged_user])
-    arranged_courseManager.create_a_course("COSC 314", "Winter", [arranged_user])
+    arranged_courseManager.create_a_course("COSC 381", "Winter", [arranged_teacher])
+    arranged_courseManager.create_a_course("COSC 314", "Winter", [arranged_teacher])
 
     # Assert:
     assert arranged_courseManager.find_a_course(1) == arranged_courseManager.course_list[0]
@@ -157,9 +167,9 @@ def test_welcome():
     #Assert:
     assert main.welcome() == "Welcome to our miniCanvas!"
 
-def test_create_a_course_main(mocker, arranged_user, arranged_course):
+def test_create_a_course_main(mocker, arranged_teacher, arranged_course):
     # Arrange:
-    mock_find_users = mocker.patch("user.UserManager.find_users", return_value=[arranged_user])
+    mock_find_users = mocker.patch("user.UserManager.find_users", return_value=[arranged_teacher])
     mock_create_a_course = mocker.patch("course.CourseManager.create_a_course", return_value=0)
     mock_find_a_course = mocker.patch("course.CourseManager.find_a_course", return_value=arranged_course)
     mock_print = mocker.patch("builtins.print")
@@ -169,15 +179,15 @@ def test_create_a_course_main(mocker, arranged_user, arranged_course):
 
     # Assert:
     mock_find_users.assert_called_with([1])
-    mock_create_a_course.assert_called_with("COSC 381", "Winter", [arranged_user])
+    mock_create_a_course.assert_called_with("COSC 381", "Winter", [arranged_teacher])
     mock_find_a_course.assert_called_with(0)
     mock_print.assert_called_with(str(arranged_course.teacher_list[0]))
     assert main.create_a_course("COSC 381", "Winter", [1]) == 0
 
-def test_import_students_main(mocker, arranged_course, arranged_user):
+def test_import_students_main(mocker, arranged_course, arranged_student):
     # Arrange:
     mock_find_a_course = mocker.patch("course.CourseManager.find_a_course", return_value=arranged_course)
-    mock_find_users = mocker.patch("user.UserManager.find_users", return_value=[arranged_user])
+    mock_find_users = mocker.patch("user.UserManager.find_users", return_value=[arranged_student])
     mock_import_students = mocker.patch("course.Course.import_students")
     mock_print = mocker.patch("builtins.print")
 
@@ -187,6 +197,6 @@ def test_import_students_main(mocker, arranged_course, arranged_user):
     # Assert:
     mock_find_a_course.assert_called_with(1)
     mock_find_users.assert_called_with([1])
-    mock_import_students.assert_called_with([arranged_user])
+    mock_import_students.assert_called_with([arranged_student])
     mock_print.assert_has_calls([mocker.call(0), mocker.call(arranged_course.student_list)])
     assert main.import_students(1, [1]) == None
